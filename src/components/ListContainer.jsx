@@ -1,67 +1,89 @@
 import React from "react"
-import { Stack, Card, IconButton, Typography } from "@mui/material"
+import { Stack, IconButton, Typography } from "@mui/material"
 import ArchiveIcon from "@mui/icons-material/Archive"
 import axios from "axios"
 import HoverCard from "./HoverCard"
-import AddTemplate from "./AddTemplate"
+import AddTemplate from "./addHelper/AddTemplate"
+import { toast } from "react-toastify"
+import { useBoardPageContext } from "../pages/BoardPage"
 
-export default function ListContainer({
-  listData,
-  cardsData,
-  cardDispatch,
-  listDispatch,
-  setSelectedCardInfo,
-}) {
+export default function ListContainer({ listData }) {
+  const { listDispatch, cardDispatch, cardsData } = useBoardPageContext()
+  const { id: listId, name: listName } = listData
+  const cardsDataOfGivenList = cardsData[listId]
+
   async function addCardHandler(cardName) {
-    const cardDataResponse = await axios.post(
-      "https://api.trello.com/1/cards",
-      {},
-      {
-        params: {
-          idList: listData.id,
-          name: cardName,
-          key: import.meta.env.VITE_API_KEY,
-          token: import.meta.env.VITE_TOKEN,
-        },
-      }
-    )
+    try {
+      const id = toast.loading("Card Creation Started ... ")
 
-    const cardDataObj = cardDataResponse.data
+      const cardDataResponse = await axios.post(
+        "https://api.trello.com/1/cards",
+        {},
+        {
+          params: {
+            idList: listData.id,
+            name: cardName,
+            key: import.meta.env.VITE_API_KEY,
+            token: import.meta.env.VITE_TOKEN,
+          },
+        }
+      )
 
-    cardDispatch({
-      type: "add",
-      cardDataObj: cardDataObj,
-    })
+      const cardDataObj = cardDataResponse.data
+
+      toast.update(id, {
+        render: `Sucessfully added ${cardDataObj.name} card`,
+        type: "success",
+        isLoading: false,
+        autoClose: 500,
+      })
+
+      cardDispatch({
+        type: "add",
+        cardDataObj: cardDataObj,
+      })
+    } catch (err) {
+      toast.update(id, {
+        render: err.message,
+        type: "error",
+        isLoading: false,
+        autoClose: 500,
+      })
+    }
   }
 
-  async function archiveListHandler() {
-    console.log("Running")
+  async function archiveListHandler(listId) {
+    try {
+      const res = await axios.put(
+        `https://api.trello.com/1/lists/${listId}/closed`,
+        {},
+        {
+          params: {
+            value: true,
+            key: import.meta.env.VITE_API_KEY,
+            token: import.meta.env.VITE_TOKEN,
+          },
+        }
+      )
 
-    const res = await axios.put(
-      `https://api.trello.com/1/lists/${listData.id}/closed`,
-      {},
-      {
-        params: {
-          value: true,
-          key: import.meta.env.VITE_API_KEY,
-          token: import.meta.env.VITE_TOKEN,
-        },
-      }
-    )
+      const { id: archivedListId, name: listName } = res.data
 
-    const archivedListId = res.data.id
+      toast.success(`${listName} list has been archived`)
 
-    listDispatch({
-      type: "archive",
-      archivedListId: archivedListId,
-    })
+      listDispatch({
+        type: "archive",
+        archivedListId: archivedListId,
+      })
+    } catch (err) {
+      toast.error(err.message)
+    }
   }
 
   return (
     <Stack
       direction="column"
       sx={{
-        backgroundColor: "blue",
+        backgroundColor: "lightseagreen",
         padding: 2,
         borderRadius: "16px",
         boxShadow: 3,
@@ -76,24 +98,21 @@ export default function ListContainer({
           alignItems="center"
         >
           <Typography variant="body1" fontWeight={700} fontSize={16}>
-            {listData["name"]}
+            {listName}
           </Typography>
-          <IconButton color="default" onClick={archiveListHandler}>
+          <IconButton
+            color="default"
+            onClick={() => archiveListHandler(listId)}
+          >
             <ArchiveIcon />
           </IconButton>
         </Stack>
       )}
-      {cardsData &&
-        cardsData.map((cardData) => (
-          <HoverCard
-            cardData={cardData}
-            key={cardData.id}
-            setSelectedCardInfo={setSelectedCardInfo}
-            listId = { listData.id } 
-            cardDispatch = {cardDispatch}
-          />
+      {cardsDataOfGivenList &&
+        cardsDataOfGivenList.map((cardData) => (
+          <HoverCard cardData={cardData} key={cardData.id} />
         ))}
-      <AddTemplate  width = {250} addName = {"Card"} addHandler = {addCardHandler} />
+      <AddTemplate width={250} addName={"Card"} addHandler={addCardHandler} />
     </Stack>
   )
 }

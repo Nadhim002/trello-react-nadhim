@@ -1,20 +1,27 @@
-import React, { useEffect, useState } from "react"
-import BoardCard from "./BoardCard"
-import axios from "axios"
-import { Typography, Grid } from "@mui/material"
-import CreateBoardModal from "./CreateBoardModal"
+import React, { useEffect, useReducer } from "react"
+import { Typography, Grid, Alert } from "@mui/material"
+
 import { toast } from "react-toastify"
+import Spinner from "../components/spinner/Spinner.jsx"
+
+import AddUsingModal from "../components/addHelper/AddUsingModal.jsx"
+import BoardCard from "../components/BoardCard.jsx"
+
+import axios from "axios"
+import { boardReducer } from "../reducers/reducers.js"
 
 export default function Homepage() {
-  const [boardsData, setBoardsData] = useState(null)
-  const [open, setOpen] = useState(false)
-  const [isLoading, setIsLoading] = useState(true)
-  const [error, setError] = useState(false)
+  const [boardsState, boardsDispatcher] = useReducer(boardReducer, {
+    error: false,
+    loading: false,
+    boardsData: [],
+  })
+  const boardsData = boardsState?.boardsData
 
   useEffect(() => {
     async function getAllBoards() {
       try {
-        const res = await axios.get(
+        const boardsDataResponse = await axios.get(
           "https://api.trello.com/1/members/me/boards",
           {
             params: {
@@ -23,11 +30,14 @@ export default function Homepage() {
             },
           }
         )
-        setBoardsData(res.data)
+        boardsDispatcher({
+          type: "set_data",
+          boardsData: boardsDataResponse.data,
+        })
       } catch (err) {
-        setError(true)
-      } finally {
-        setIsLoading(false)
+        boardsDispatcher({
+          type: "error",
+        })
       }
     }
 
@@ -53,22 +63,24 @@ export default function Homepage() {
     const id = toast.loading("Board Creation Started ... ")
 
     try {
-      const newBoardObj = await addNewBoard(newBoardName)
-
+      const newBoard = await addNewBoard(newBoardName)
       toast.update(id, {
-        render: `${newBoardObj.name} Board created Sucessfully`,
+        render: `${newBoard.name} Board created Sucessfully`,
         type: "success",
         isLoading: false,
-        autoClose: 1000,
+        autoClose: 500,
       })
 
-      setBoardsData([...boardsData, newBoardObj])
+      boardsDispatcher({
+        type: "add",
+        newBoard: newBoard,
+      })
     } catch (err) {
       toast.update(id, {
         render: err.message,
         type: "error",
         isLoading: false,
-        autoClose: 1000,
+        autoClose: 500,
       })
     }
   }
@@ -78,6 +90,9 @@ export default function Homepage() {
       <Grid
         container
         sx={{
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
           width: "200px",
           height: "120px",
           backgroundColor: "#D3D3D3",
@@ -87,7 +102,6 @@ export default function Homepage() {
             cursor: "pointer",
           },
         }}
-        onClick={() => setOpen(true)}
       >
         <Typography
           variant="h6"
@@ -101,10 +115,14 @@ export default function Homepage() {
 
   return (
     <>
-      {isLoading ? (
-        <Grid>Loading...</Grid>
-      ) : error ? (
-        <Grid>SomeThing went wrong...</Grid>
+      {boardsState.loading ? (
+        <Grid>
+          <Spinner />
+        </Grid>
+      ) : boardsState.error ? (
+        <Alert severity="error">
+          Something went wrong. Please try again later.
+        </Alert>
       ) : (
         <Grid
           container
@@ -117,15 +135,12 @@ export default function Homepage() {
             boardsData.map((boardData) => {
               return <BoardCard boardData={boardData} key={boardData.id} />
             })}
-          {boardsData && createBoard()}
+
+          <AddUsingModal addHandler={addNewBoardHandler} toAddName={"Board"}>
+            {createBoard()}
+          </AddUsingModal>
         </Grid>
       )}
-
-      <CreateBoardModal
-        open={open}
-        addNewBoardHandler={addNewBoardHandler}
-        setOpen={setOpen}
-      />
     </>
   )
 }

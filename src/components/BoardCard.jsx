@@ -1,7 +1,6 @@
-import React from "react"
+import React  , {createContext  , useContext } from "react"
 import { useNavigate } from "react-router-dom"
 import { Grid, Typography } from "@mui/material"
-import { URL } from "url"
 
 export default function BoardCard({ boardData }) {
   const navigate = useNavigate()

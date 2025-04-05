@@ -7,14 +7,15 @@ import {
   IconButton,
   ButtonGroup,
 } from "@mui/material"
-import ArchiveIcon from "@mui/icons-material/Archive"
 import DeleteIcon from "@mui/icons-material/Delete"
 import axios from "axios"
 import { toast } from "react-toastify"
+import { useBoardPageContext } from "../pages/BoardPage"
 
-function HoverCard({ cardData, setSelectedCardInfo, cardDispatch }) {
-
+function HoverCard({ cardData }) {
+  const { setSelectedCardInfo, cardDispatch } = useBoardPageContext()
   const [hover, setHover] = useState(false)
+  const { id: cardId, idList: listId, name: cardName } = cardData
   const isChecked = cardData.dueComplete
 
   async function cardUpdateHandler(
@@ -47,7 +48,7 @@ function HoverCard({ cardData, setSelectedCardInfo, cardDispatch }) {
     }
   }
 
-  async function cardDeleteHandler(cardId , listId ) {
+  async function cardDeleteHandler(cardId, listId) {
     try {
       const response = await axios.delete(
         `https://api.trello.com/1/cards/${cardId}`,
@@ -57,13 +58,13 @@ function HoverCard({ cardData, setSelectedCardInfo, cardDispatch }) {
             token: import.meta.env.VITE_TOKEN,
           },
         }
-      )      
+      )
 
       if (response.status == 200) {
         cardDispatch({
           type: "delete",
           cardId: cardId,
-          listId: listId 
+          listId: listId,
         })
 
         toast.success(`Card has been Deleted scucessfully`)
@@ -105,7 +106,7 @@ function HoverCard({ cardData, setSelectedCardInfo, cardDispatch }) {
           }}
         >
           <Typography variant="body1" fontWeight={600}>
-            {cardData.name}
+            {cardName}
           </Typography>
         </Card>
 
@@ -114,7 +115,7 @@ function HoverCard({ cardData, setSelectedCardInfo, cardDispatch }) {
             sx={{
               visibility: hover ? "visible" : "hidden",
             }}
-            onClick={() => cardDeleteHandler(cardData.id , cardData.idList )}
+            onClick={() => cardDeleteHandler(cardId, listId)}
           >
             <DeleteIcon />
           </IconButton>
@@ -124,7 +125,7 @@ function HoverCard({ cardData, setSelectedCardInfo, cardDispatch }) {
             }}
             checked={isChecked}
             onChange={() =>
-              cardUpdateHandler(cardData.id, "dueComplete", !isChecked)
+              cardUpdateHandler(cardId, "dueComplete", !isChecked)
             }
           />
         </ButtonGroup>

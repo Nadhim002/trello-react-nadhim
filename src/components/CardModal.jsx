@@ -1,4 +1,4 @@
-import React, { useEffect, useReducer } from "react"
+import React, { useEffect, useReducer, useContext, createContext } from "react"
 import { Card, Modal, Typography, Stack, Grid } from "@mui/material"
 import { CheckListReducer, checkItemReducer } from "../reducers/reducers.js"
 import axios from "axios"
@@ -6,37 +6,26 @@ import AddCheckList from "./AddCheckList.jsx"
 import { toast } from "react-toastify"
 import CheckList from "./CheckList"
 
-// const style = {
-//   position: "absolute",
-//   top: "50%",
-//   left: "50%",
-//   transform: "translate(-50%, -50%)",
-//   width: 600,
-//   maxHeight: "50vh",
-//   overflowY: "auto",
-//   bgcolor: "background.paper",
-//   border: "2px solid #000",
-//   display: "flex",
-//   flexDirection: "column",
-//   justifyContent: "center",
-//   alignItems: "center",
-// }
-
 const style = {
   position: "absolute",
   top: "50%",
   left: "50%",
   transform: "translate(-50%, -50%)",
   width: 600,
-  maxHeight: "70vh", // Increased height
+  maxHeight: "70vh",
   overflowY: "auto",
   bgcolor: "background.paper",
-  boxShadow: 24, // More modern shadow
-  borderRadius: 2, // Rounded corners
-  p: 3, // Add padding
+  boxShadow: 24,
+  borderRadius: 2,
+  p: 3,
   display: "flex",
   flexDirection: "column",
-  gap: 2, // Add consistent gap between elements
+  gap: 2,
+}
+
+const cardModelContext = createContext()
+export function useCardModelContext() {
+  return useContext(cardModelContext)
 }
 
 export default function CardModal({ selectedCardInfo, setSelectedCardInfo }) {
@@ -105,43 +94,51 @@ export default function CardModal({ selectedCardInfo, setSelectedCardInfo }) {
     }
   }
 
-
   return (
-    <Modal
-      open={Boolean(selectedCardInfo)}
-      onClose={() => setSelectedCardInfo(null)}
-      sx={{ backdropFilter: "blur(2px)" }}
+    <cardModelContext.Provider
+      value={{
+        checkListData,
+        checkListDispatch,
+        checkItemData,
+        checkItemDispatch,
+      }}
     >
-      <Card sx={style}>
-        <Stack
-          direction="row"
-          justifyContent="space-between"
-          alignItems="center"
-          sx={{
-            pb: 2,
-            borderBottom: 1,
-            borderColor: "divider",
-          }}
-        >
-          <Typography variant="h5" sx={{ fontWeight: 600 }}>
-            {selectedCardInfo?.name ?? "Name Not Found"}
-          </Typography>
-          <AddCheckList addNewCheckListHandler={addNewCheckListHandler} />
-        </Stack>
+      <Modal
+        open={Boolean(selectedCardInfo)}
+        onClose={() => setSelectedCardInfo(null)}
+        sx={{ backdropFilter: "blur(2px)" }}
+      >
+        <Card sx={style}>
+          <Stack
+            direction="row"
+            justifyContent="space-between"
+            alignItems="center"
+            sx={{
+              pb: 2,
+              borderBottom: 1,
+              borderColor: "divider",
+            }}
+          >
+            <Typography variant="h5" sx={{ fontWeight: 600 }}>
+              {selectedCardInfo?.name ?? "Name Not Found"}
+            </Typography>
+            <AddCheckList addNewCheckListHandler={addNewCheckListHandler} />
+          </Stack>
 
-        <Grid container spacing={2}>
-          {checkListData &&
-            checkListData.map((checkList) => (
-              <CheckList
-                key={checkList.id}
-                checkList={checkList}
-                checkItemData={checkItemData?.[checkList.id]}
-                checkListDispatch={checkListDispatch}
-                checkItemDispatch={checkItemDispatch}
-              />
-            ))}
-        </Grid>
-      </Card>
-    </Modal>
+          <Grid container spacing={2}>
+            {checkListData &&
+              checkListData.map((checkList) => (
+                <CheckList
+                  key={checkList.id}
+                  checkList={checkList}
+                  checkItemData={checkItemData?.[checkList.id]}
+                  checkListDispatch={checkListDispatch}
+                  checkItemDispatch={checkItemDispatch}
+                />
+              ))}
+          </Grid>
+        </Card>
+      </Modal>
+    </cardModelContext.Provider>
   )
 }

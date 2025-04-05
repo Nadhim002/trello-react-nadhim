@@ -1,4 +1,4 @@
-import React from "react"
+import React, { useContext } from "react"
 import {
   Card,
   Checkbox,
@@ -10,9 +10,10 @@ import {
   ListItemText,
 } from "@mui/material"
 import DeleteIcon from "@mui/icons-material/Delete"
-import AddTemplate from "./AddTemplate"
+import AddTemplate from "./addHelper/AddTemplate"
 import { toast } from "react-toastify"
 import axios from "axios"
+import {useCardModelContext} from "./CardModal"
 
 export default function CheckList({
   checkList,
@@ -20,6 +21,14 @@ export default function CheckList({
   checkListDispatch,
   checkItemDispatch,
 }) {
+
+  // const {
+  //   checkListDispatch,
+  //   checkItemData,
+  //   checkItemDispatch,
+  // } = useCardModelContext()
+
+
   const { name, id, idCard } = checkList
 
   async function checkListDeleteHandler(checkListId) {
@@ -143,7 +152,6 @@ export default function CheckList({
         p: 2,
         width: 400,
         flexGrow: 1,
-        p: 2,
         borderRadius: 2,
         boxShadow: 1,
         "&:hover": {

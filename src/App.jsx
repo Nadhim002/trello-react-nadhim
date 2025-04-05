@@ -6,8 +6,8 @@ import {
   Route,
 } from "react-router-dom"
 import Mainlayout from "./layouts/Mainlayout"
-import BoardPage from "./components/BoardPage"
-import Homepage from "./components/Homepage"
+import BoardPage from "./pages/BoardPage"
+import Homepage from "./pages/Homepage"
 
 const route = createBrowserRouter(
   createRoutesFromElements(

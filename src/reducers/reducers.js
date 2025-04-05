@@ -1,3 +1,20 @@
+export function boardReducer(state, action) {
+  
+  switch (action.type) {
+    case "set_data":
+      return { ...state, loading: false, boardsData : action.boardsData }
+    case "error":
+      return { ...state, loading: false, error: true }
+    case "add":
+      return {
+        ...state,
+        boardsData: [...(state.boardsData ?? []), action.newBoard],
+      }
+    default:
+      return state
+  }
+}
+
 export function cardReducer(state, action) {
   switch (action.type) {
     case "set_data":
@@ -73,7 +90,10 @@ export function checkItemReducer(state, action) {
       return action.data ?? {}
     case "add": {
       const { idChecklist } = action.newCheckItem
-      const updatedCheckItems = [...state[idChecklist], action.newCheckItem]
+      const updatedCheckItems = [
+        ...(state[idChecklist] ?? []),
+        action.newCheckItem,
+      ]
       return { ...state, [idChecklist]: updatedCheckItems }
     }
     case "delete": {

@@ -1,14 +1,28 @@
-import React, { useReducer, useEffect, useRef, useState } from "react"
+import React, {
+  useReducer,
+  useEffect,
+  useRef,
+  useState,
+  useContext,
+  createContext,
+} from "react"
+
 import { useParams } from "react-router-dom"
 import { toast } from "react-toastify"
 import axios from "axios"
-
-import { Stack, Box, Card, Modal, Typography } from "@mui/material"
-import ListContainer from "./ListContainer"
-import AddTemplate from "./AddTemplate"
-import CardModal from "./CardModal"
+import { Stack, Box, Typography, Alert } from "@mui/material"
+import ListContainer from "../components/ListContainer.jsx"
+import AddTemplate from "../components/addHelper/AddTemplate.jsx"
+import CardModal from "../components/CardModal.jsx"
+import Spinner from "../components/spinner/Spinner.jsx"
 import { cardReducer, listReducer } from "../reducers/reducers.js"
 import { getBoardInfo } from "../backend/loaders.js"
+
+const boardPageContext = createContext()
+
+export function useBoardPageContext() {
+  return useContext(boardPageContext)
+}
 
 export default function BoardPage() {
   const { boardId } = useParams()
@@ -17,7 +31,6 @@ export default function BoardPage() {
   const [listData, listDispatch] = useReducer(listReducer, [])
   const [cardsData, cardDispatch] = useReducer(cardReducer, {})
   const boardInfo = useRef(null)
-
   const [selectedCardInfo, setSelectedCardInfo] = useState(null)
 
   useEffect(() => {
@@ -54,9 +67,8 @@ export default function BoardPage() {
   async function addListHandler(newListName) {
     const boardId = boardInfo.current.id
 
-    console.log(boardId, newListName)
-
     const id = toast.loading("List Creation Started ... ")
+
     try {
       const res = await axios.post(
         "https://api.trello.com/1/lists",
@@ -77,7 +89,7 @@ export default function BoardPage() {
         render: `Sucessfully added ${newListObject.name}`,
         type: "success",
         isLoading: false,
-        autoClose: 1000,
+        autoClose: 500,
       })
 
       listDispatch({
@@ -89,18 +101,42 @@ export default function BoardPage() {
         render: err.message,
         type: "error",
         isLoading: false,
-        autoClose: 1000,
+        autoClose: 500,
       })
     }
   }
 
   return loading ? (
-    <Card>Loading ...</Card>
+    <Spinner />
   ) : error ? (
-    <Card>SomeThing Went Wrong ...</Card>
+    <Alert severity="error">
+      Something went wrong. Please try again later.
+    </Alert>
   ) : (
-    <>
-      <Typography>{boardInfo.current.name}</Typography>
+    <boardPageContext.Provider
+      value={{
+        listData,
+        listDispatch,
+        cardsData,
+        cardDispatch,
+        setSelectedCardInfo,
+      }}
+    >
+      <Box
+        sx={{
+          backgroundColor: "#f5f5f5",
+          padding: 0.5,
+          px: 1,
+          margin: 0,
+          borderBottom: "1px solid #ddd",
+          fontWeight: "500",
+          borderRadius: "8px",
+        }}
+      >
+        <Typography variant="h4" gutterBottom>
+          {boardInfo.current.name}
+        </Typography>
+      </Box>
 
       <Stack
         direction="row"
@@ -112,17 +148,13 @@ export default function BoardPage() {
           maxWidth: "100%",
           padding: 2,
           spacing: 4,
+          height: "90vh",
+          backgroundImage: `url(${boardInfo.current["prefs"]["backgroundImage"]})`,
+          backgroundColor: boardInfo.current.prefs.backgroundColor,
         }}
       >
         {listData.map((list) => (
-          <ListContainer
-            listData={list}
-            cardsData={cardsData[list["id"]]}
-            key={list["id"]}
-            cardDispatch={cardDispatch}
-            listDispatch={listDispatch}
-            setSelectedCardInfo={setSelectedCardInfo}
-          />
+          <ListContainer listData={list} key={list["id"]} />
         ))}
 
         <Box sx={{ flex: "0 0 auto" }}>
@@ -140,6 +172,6 @@ export default function BoardPage() {
           setSelectedCardInfo={setSelectedCardInfo}
         />
       )}
-    </>
+    </boardPageContext.Provider>
   )
 }
