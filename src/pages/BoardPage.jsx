@@ -119,6 +119,7 @@ export default function BoardPage() {
         listDispatch,
         cardsData,
         cardDispatch,
+        selectedCardInfo , 
         setSelectedCardInfo,
       }}
     >

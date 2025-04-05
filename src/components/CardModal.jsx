@@ -1,10 +1,26 @@
-import React, { useEffect, useReducer, useContext, createContext } from "react"
-import { Card, Modal, Typography, Stack, Grid } from "@mui/material"
+import React, {
+  useEffect,
+  useReducer,
+  useContext,
+  createContext,
+  useState,
+} from "react"
+import {
+  Card,
+  Modal,
+  Typography,
+  Stack,
+  Grid,
+  Button,
+  Alert,
+} from "@mui/material"
 import { CheckListReducer, checkItemReducer } from "../reducers/reducers.js"
 import axios from "axios"
-import AddCheckList from "./AddCheckList.jsx"
+import { useBoardPageContext } from "../pages/BoardPage"
+import AddUsingModal from "./addHelper/AddUsingModal"
 import { toast } from "react-toastify"
 import CheckList from "./CheckList"
+import Spinner from "./spinner/Spinner"
 
 const style = {
   position: "absolute",
@@ -28,50 +44,63 @@ export function useCardModelContext() {
   return useContext(cardModelContext)
 }
 
-export default function CardModal({ selectedCardInfo, setSelectedCardInfo }) {
+export default function CardModal() {
+  const { selectedCardInfo, setSelectedCardInfo } = useBoardPageContext()
+
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(false)
+
   const [checkListData, checkListDispatch] = useReducer(CheckListReducer, [])
   const [checkItemData, checkItemDispatch] = useReducer(checkItemReducer, {})
 
   useEffect(() => {
     async function getCardInfo(cardId) {
-      const checkListResponse = await axios.get(
-        `https://api.trello.com/1/cards/${cardId}/checklists`,
-        {
-          params: {
-            key: import.meta.env.VITE_API_KEY,
-            token: import.meta.env.VITE_TOKEN,
-          },
-        }
-      )
+      try {
+        const checkListResponse = await axios.get(
+          `https://api.trello.com/1/cards/${cardId}/checklists`,
+          {
+            params: {
+              key: import.meta.env.VITE_API_KEY,
+              token: import.meta.env.VITE_TOKEN,
+            },
+          }
+        )
 
-      const responseData = checkListResponse.data
+        const responseData = checkListResponse.data
 
-      const checkListData = []
-      const checkItemData = {}
+        const checkListData = []
+        const checkItemData = {}
 
-      responseData.forEach((checkList) => {
-        const checkListId = checkList.id
-        const { checkItems, ...otherInfoOfCheckList } = checkList
-        checkItemData[checkListId] = checkList["checkItems"]
-        checkListData.push(otherInfoOfCheckList)
-      })
+        responseData.forEach((checkList) => {
+          const checkListId = checkList.id
+          const { checkItems, ...otherInfoOfCheckList } = checkList
+          checkItemData[checkListId] = checkList["checkItems"]
+          checkListData.push(otherInfoOfCheckList)
+        })
 
-      checkListDispatch({
-        type: "set_data",
-        data: checkListData,
-      })
+        checkListDispatch({
+          type: "set_data",
+          data: checkListData,
+        })
 
-      checkItemDispatch({
-        type: "set_data",
-        data: checkItemData,
-      })
+        checkItemDispatch({
+          type: "set_data",
+          data: checkItemData,
+        })
+      } catch (err) {
+        setError(true)
+      } finally {
+        setLoading(false)
+      }
     }
 
     getCardInfo(selectedCardInfo.id)
-  }, [])
+  }, [selectedCardInfo])
 
   async function addNewCheckListHandler(checkListName) {
     try {
+      const id = toast.loading("Check List Creation Started ...")
+
       const checkListResponse = await axios.post(
         `https://api.trello.com/1/checklists`,
         {},
@@ -88,9 +117,20 @@ export default function CardModal({ selectedCardInfo, setSelectedCardInfo }) {
         type: "add",
         checkList: checkListResponse.data,
       })
-      toast.success("Added Sucessfully")
+
+      toast.update(id, {
+        render: `Sucessfully added ${checkListResponse?.data?.name}`,
+        type: "success",
+        isLoading: false,
+        autoClose: 500,
+      })
     } catch (err) {
-      toast.error("Something went wrong")
+      toast.update(id, {
+        render: err.message,
+        type: "error",
+        isLoading: false,
+        autoClose: 500,
+      })
     }
   }
 
@@ -122,21 +162,29 @@ export default function CardModal({ selectedCardInfo, setSelectedCardInfo }) {
             <Typography variant="h5" sx={{ fontWeight: 600 }}>
               {selectedCardInfo?.name ?? "Name Not Found"}
             </Typography>
-            <AddCheckList addNewCheckListHandler={addNewCheckListHandler} />
+            <AddUsingModal
+              addHandler={addNewCheckListHandler}
+              toAddName={"Check List"}
+            >
+              <Button variant="contained">Add new check list</Button>
+            </AddUsingModal>
           </Stack>
 
-          <Grid container spacing={2}>
-            {checkListData &&
-              checkListData.map((checkList) => (
-                <CheckList
-                  key={checkList.id}
-                  checkList={checkList}
-                  checkItemData={checkItemData?.[checkList.id]}
-                  checkListDispatch={checkListDispatch}
-                  checkItemDispatch={checkItemDispatch}
-                />
-              ))}
-          </Grid>
+          {loading ? (
+            <Spinner />
+          ) : error ? (
+            <Alert severity="error">"Something went Wrong</Alert>
+          ) : (
+            <Grid container spacing={2}>
+              {checkListData.length == 0 ? (
+                <div>Add Check List to Show</div>
+              ) : (
+                checkListData.map((checkList) => (
+                  <CheckList key={checkList.id} checkList={checkList} />
+                ))
+              )}
+            </Grid>
+          )}
         </Card>
       </Modal>
     </cardModelContext.Provider>

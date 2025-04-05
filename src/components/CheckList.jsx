@@ -8,28 +8,20 @@ import {
   List,
   ListItem,
   ListItemText,
+  LinearProgress,
 } from "@mui/material"
 import DeleteIcon from "@mui/icons-material/Delete"
 import AddTemplate from "./addHelper/AddTemplate"
 import { toast } from "react-toastify"
 import axios from "axios"
-import {useCardModelContext} from "./CardModal"
+import { useCardModelContext } from "./CardModal"
 
-export default function CheckList({
-  checkList,
-  checkItemData,
-  checkListDispatch,
-  checkItemDispatch,
-}) {
+export default function CheckList({ checkList }) {
+  const { checkListDispatch, checkItemData, checkItemDispatch } =
+    useCardModelContext()
 
-  // const {
-  //   checkListDispatch,
-  //   checkItemData,
-  //   checkItemDispatch,
-  // } = useCardModelContext()
-
-
-  const { name, id, idCard } = checkList
+  const { name: checkListName, id: checkListId, idCard: cardId } = checkList
+  const checkItemDataOfGivenCheckList = checkItemData[checkListId] ?? []
 
   async function checkListDeleteHandler(checkListId) {
     try {
@@ -49,7 +41,6 @@ export default function CheckList({
           type: "delete",
           checkListId: checkListId,
         })
-
         toast.success(`Check List has been Deleted scucessfully`)
       } else {
         toast.error("Something went wrong")
@@ -60,9 +51,11 @@ export default function CheckList({
   }
 
   async function addCheckItemHandler(newCheckItemName) {
+    const id = toast.loading("Check Item Creation Started...")
+
     try {
       const response = await axios.post(
-        `https://api.trello.com/1/checklists/${id}/checkItems`,
+        `https://api.trello.com/1/checklists/${checkListId}/checkItems`,
         {},
         {
           params: {
@@ -75,14 +68,24 @@ export default function CheckList({
 
       const newCheckItem = response.data
 
-      toast.success("Done and Dusted")
+      toast.update(id, {
+        render: `${newCheckItem.name} Check Item has been added`,
+        type: "success",
+        isLoading: false,
+        autoClose: 500,
+      })
 
       checkItemDispatch({
         type: "add",
         newCheckItem: newCheckItem,
       })
     } catch (err) {
-      toast.error(err.message)
+      toast.update(id, {
+        render: err.message,
+        type: "error",
+        isLoading: false,
+        autoClose: 500,
+      })
     }
   }
 
@@ -144,6 +147,21 @@ export default function CheckList({
     }
   }
 
+  const progress = calculateProgress(checkItemDataOfGivenCheckList)
+
+  function calculateProgress(checkItemData) {
+    const noOfItemsCompleted = checkItemData.reduce(
+      (completedCount, checkItem) => {
+        if (checkItem?.state == "complete") {
+          completedCount++
+        }
+        return completedCount
+      },
+      0
+    )
+    return (noOfItemsCompleted * 100) / (checkItemData.length || 1)
+  }
+
   return (
     <Card
       sx={{
@@ -167,19 +185,27 @@ export default function CheckList({
         }}
       >
         <div style={{ display: "flex", alignItems: "center" }}>
-          <Typography variant="h6">{name}</Typography>
+          <Typography variant="h6">{checkListName}</Typography>
         </div>
         <Button
-          onClick={() => checkListDeleteHandler(id)}
+          onClick={() => checkListDeleteHandler(checkListId)}
           sx={{ color: "white" }}
         >
           <Typography variant="button">Destroy</Typography>
         </Button>
       </div>
 
-      {checkItemData && (
+      {checkItemDataOfGivenCheckList && (
         <List>
-          {checkItemData.map((item) => (
+          {/* Progress Bar */}
+          <LinearProgress
+            variant="determinate"
+            value={progress}
+            sx={{ bgcolor: "gray", height: 5, my: 1 }}
+          />
+          <Typography variant="caption">{Math.round(progress)}%</Typography>
+
+          {checkItemDataOfGivenCheckList.map((item) => (
             <ListItem
               key={item.id}
               sx={{
@@ -193,8 +219,8 @@ export default function CheckList({
                 checked={item.state !== "incomplete"}
                 onChange={() =>
                   checkItemStatusHandler(
-                    idCard,
-                    id,
+                    cardId,
+                    checkListId,
                     item.id,
                     item.state == "incomplete"
                   )
@@ -208,7 +234,7 @@ export default function CheckList({
               />
 
               <IconButton
-                onClick={() => checkItemDeleteHandler(id, item.id)}
+                onClick={() => checkItemDeleteHandler(checkListId, item.id)}
                 sx={{ color: "white" }}
               >
                 <DeleteIcon />
@@ -222,33 +248,3 @@ export default function CheckList({
     </Card>
   )
 }
-
-{
-  /* Title & Delete Button */
-}
-
-//   {/* Progress Bar */}
-//   <LinearProgress variant="determinate" value={progress} sx={{ bgcolor: "gray", height: 5, my: 1 }} />
-//   <Typography variant="caption">{Math.round(progress)}%</Typography>
-
-{
-  /* Checklist Items */
-}
-
-//   {/* Add Item Input & Button */}
-//   <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-//     <TextField
-//       value={newItem}
-//       onChange={(e) => setNewItem(e.target.value)}
-//       variant="outlined"
-//       size="small"
-//       sx={{ bgcolor: "white", borderRadius: 1, flexGrow: 1 }}
-//     />
-//     <Button
-//       variant="contained"
-//       onClick={handleAddItem}
-//       sx={{ bgcolor: "gray", color: "white", textTransform: "none" }}
-//     >
-//       Add an item
-//     </Button>
-//   </div>

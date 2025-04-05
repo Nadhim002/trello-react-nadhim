@@ -15,13 +15,14 @@ export default function AddUsingModal({ children, toAddName, addHandler }) {
     left: "50%",
     transform: "translate(-50%, -50%)",
     width: 400,
-    bgcolor: "#f0f0f0",
-    border: "2px solid #000",
-    boxShadow: 24,
-    pt: 2,
+    bgcolor: "white",
+    borderRadius: "8px",
+    boxShadow: "0 10px 25px rgba(0, 0, 0, 0.2)",
+    pt: 3,
     px: 4,
     pb: 3,
-    backdropFilter: "blur(2px)",
+    backdropFilter: "blur(5px)",
+    outline: "none",
   }
 
   const handleSubmit = (e) => {
@@ -44,34 +45,62 @@ export default function AddUsingModal({ children, toAddName, addHandler }) {
       <Modal open={open} onClose={handleClose}>
         <form onSubmit={handleSubmit}>
           <Box sx={style}>
+            <h2
+              style={{
+                marginBottom: "20px",
+                fontWeight: 600,
+                color: "#333",
+              }}
+            >
+              Add {toAddName}
+            </h2>
+
             <Input
               onChange={(e) => setInputValue(e.target.value)}
               value={inputValue}
               placeholder={`Enter ${toAddName} name`}
               fullWidth
               autoFocus
+              sx={{
+                padding: "10px",
+                marginBottom: "24px",
+                "&:before": { borderBottom: "2px solid gray" },
+                "&:after": { borderBottom: "2px solid black" },
+              }}
             />
 
-            <ButtonGroup sx={{ padding: 4, gap: 2, display: "flex" }}>
-              <Button
-                type="submit"
-                sx={{
-                  backgroundColor: "#4CAF50",
-                  color: "white",
-                  "&:hover": { backgroundColor: "#45a049" },
-                }}
-              >
-                Add
-              </Button>
+            <ButtonGroup
+              sx={{
+                display: "flex",
+                justifyContent: "flex-end",
+                gap: 2,
+                marginTop: 2,
+              }}
+            >
               <Button
                 onClick={handleClose}
                 sx={{
-                  backgroundColor: "#f44336",
-                  color: "white",
-                  "&:hover": { backgroundColor: "#e57373" },
+                  backgroundColor: "transparent",
+                  color: "#666",
+                  border: "1px solid #ddd",
+                  padding: "8px 16px",
+                  textTransform: "none",
+                  fontWeight: 500,
                 }}
               >
                 Cancel
+              </Button>
+              <Button
+                type="submit"
+                sx={{
+                  backgroundColor: "#3f51b5",
+                  color: "white",
+                  padding: "8px 16px",
+                  textTransform: "none",
+                  fontWeight: 500,
+                }}
+              >
+                Add
               </Button>
             </ButtonGroup>
           </Box>
