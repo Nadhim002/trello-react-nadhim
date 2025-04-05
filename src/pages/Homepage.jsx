@@ -20,7 +20,6 @@ export default function Homepage() {
   const boardsData = boardsState?.boardsData
 
   useEffect(() => {
-
     async function getAllBoards() {
       try {
         const boardsDataResponse = await axios.get(
@@ -117,13 +116,6 @@ export default function Homepage() {
 
   return (
     <>
-      <Helmet>
-        <title>Home Page</title>
-        <meta
-          name="description"
-          content="This is the home page of my website"
-        />
-      </Helmet>
       {boardsState.loading ? (
         <Grid>
           <Spinner />

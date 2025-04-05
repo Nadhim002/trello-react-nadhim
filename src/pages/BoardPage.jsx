@@ -109,13 +109,6 @@ export default function BoardPage() {
 
   return (
     <>
-      <Helmet>
-        <title>{"Board Page"}</title>
-        <meta
-          name="description"
-          content="This is the home page of my website"
-        />
-      </Helmet>
       {loading ? (
         <Spinner />
       ) : error ? (
