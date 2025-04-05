@@ -1,5 +1,6 @@
 import React, { useEffect, useReducer } from "react"
 import { Typography, Grid, Alert } from "@mui/material"
+import { Helmet } from "react-helmet"
 
 import { toast } from "react-toastify"
 import Spinner from "../components/spinner/Spinner.jsx"
@@ -19,6 +20,7 @@ export default function Homepage() {
   const boardsData = boardsState?.boardsData
 
   useEffect(() => {
+
     async function getAllBoards() {
       try {
         const boardsDataResponse = await axios.get(
@@ -115,6 +117,13 @@ export default function Homepage() {
 
   return (
     <>
+      <Helmet>
+        <title>Home Page</title>
+        <meta
+          name="description"
+          content="This is the home page of my website"
+        />
+      </Helmet>
       {boardsState.loading ? (
         <Grid>
           <Spinner />
