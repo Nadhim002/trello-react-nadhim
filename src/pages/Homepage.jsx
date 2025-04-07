@@ -13,7 +13,7 @@ import { boardReducer } from "../reducers/reducers.js"
 export default function Homepage() {
   const [boardsState, boardsDispatcher] = useReducer(boardReducer, {
     error: false,
-    loading: false,
+    loading: true ,
     boardsData: [],
   })
   const boardsData = boardsState?.boardsData

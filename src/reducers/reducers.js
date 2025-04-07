@@ -1,8 +1,7 @@
 export function boardReducer(state, action) {
-  
   switch (action.type) {
     case "set_data":
-      return { ...state, loading: false, boardsData : action.boardsData }
+      return { ...state, loading: false, boardsData: action.boardsData }
     case "error":
       return { ...state, loading: false, error: true }
     case "add":
