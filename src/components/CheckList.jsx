@@ -188,10 +188,11 @@ export default function CheckList({ checkList }) {
           <Typography variant="h6">{checkListName}</Typography>
         </div>
         <Button
+        variant="contained"
           onClick={() => checkListDeleteHandler(checkListId)}
           sx={{ color: "white" }}
         >
-          <Typography variant="button">Destroy</Typography>
+          <Typography variant="button" >Destroy</Typography>
         </Button>
       </div>
 

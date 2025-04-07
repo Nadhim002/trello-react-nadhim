@@ -1,6 +1,5 @@
 import React, { useEffect, useReducer } from "react"
 import { Typography, Grid, Alert } from "@mui/material"
-import { Helmet } from "react-helmet"
 
 import { toast } from "react-toastify"
 import Spinner from "../components/spinner/Spinner.jsx"
