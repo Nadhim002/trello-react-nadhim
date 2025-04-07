@@ -1,22 +1,17 @@
 import React, { useEffect, useReducer } from "react"
 import { Typography, Grid, Alert } from "@mui/material"
-
 import { toast } from "react-toastify"
 import Spinner from "../components/spinner/Spinner.jsx"
-
 import AddUsingModal from "../components/addHelper/AddUsingModal.jsx"
 import BoardCard from "../components/BoardCard.jsx"
-
 import axios from "axios"
-import { boardReducer } from "../reducers/reducers.js"
+import { useSelector, useDispatch } from "react-redux"
+import { add as addBoard, setData as setBoardData, setError } from "../features/boardSlice.js"
 
 export default function Homepage() {
-  const [boardsState, boardsDispatcher] = useReducer(boardReducer, {
-    error: false,
-    loading: true ,
-    boardsData: [],
-  })
-  const boardsData = boardsState?.boardsData
+
+  const { error, loading, boardsData } = useSelector(state => state.board)
+  const dispatch = useDispatch()
 
   useEffect(() => {
     async function getAllBoards() {
@@ -30,14 +25,13 @@ export default function Homepage() {
             },
           }
         )
-        boardsDispatcher({
-          type: "set_data",
-          boardsData: boardsDataResponse.data,
-        })
+
+        dispatch(setBoardData(boardsDataResponse.data))
+
       } catch (err) {
-        boardsDispatcher({
-          type: "error",
-        })
+
+        dispatch(setError())
+
       }
     }
 
@@ -45,6 +39,7 @@ export default function Homepage() {
   }, [])
 
   async function addNewBoard(newBoardName) {
+
     const res = await axios.post(
       "https://api.trello.com/1/boards/",
       {},
@@ -57,13 +52,16 @@ export default function Homepage() {
       }
     )
     return res.data
+    
   }
 
   async function addNewBoardHandler(newBoardName) {
+
     const id = toast.loading("Board Creation Started ... ")
 
     try {
       const newBoard = await addNewBoard(newBoardName)
+
       toast.update(id, {
         render: `${newBoard.name} Board created Sucessfully`,
         type: "success",
@@ -71,10 +69,8 @@ export default function Homepage() {
         autoClose: 500,
       })
 
-      boardsDispatcher({
-        type: "add",
-        newBoard: newBoard,
-      })
+      dispatch(addBoard(newBoard))
+
     } catch (err) {
       toast.update(id, {
         render: err.message,
@@ -115,11 +111,11 @@ export default function Homepage() {
 
   return (
     <>
-      {boardsState.loading ? (
+      {loading ? (
         <Grid>
           <Spinner />
         </Grid>
-      ) : boardsState.error ? (
+      ) : error ? (
         <Alert severity="error">
           Something went wrong. Please try again later.
         </Alert>

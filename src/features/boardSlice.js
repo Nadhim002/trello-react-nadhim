@@ -1,6 +1,6 @@
 import { createSlice } from "@reduxjs/toolkit"
 
-const initialSate = {
+const initialState = {
   error: false,
   loading: true,
   boardsData: [],
@@ -8,7 +8,7 @@ const initialSate = {
 
 const boardSlice = createSlice({
   name: "board",
-  initialSate,
+  initialState,
   reducers: {
     setData: (state, action) => {
       state.loading = false
