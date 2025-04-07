@@ -5,10 +5,16 @@ import axios from "axios"
 import HoverCard from "./HoverCard"
 import AddTemplate from "./addHelper/AddTemplate"
 import { toast } from "react-toastify"
-import { useBoardPageContext } from "../pages/BoardPage"
+import { useDispatch, useSelector } from "react-redux"
+import { archive as archiveListAction, setError as setListError } from "../features/listSlice"
+import { add as addCard, setError as setCardError } from "../features/listSlice"
+
 
 export default function ListContainer({ listData }) {
-  const { listDispatch, cardDispatch, cardsData } = useBoardPageContext()
+
+  const cardsData = useSelector(state => state.card.cardsData)
+  const dispatch = useDispatch()
+
   const { id: listId, name: listName } = listData
   const cardsDataOfGivenList = cardsData[listId]
 
@@ -16,66 +22,44 @@ export default function ListContainer({ listData }) {
     try {
       const id = toast.loading("Card Creation Started ... ")
 
-      const cardDataResponse = await axios.post(
-        "https://api.trello.com/1/cards",
-        {},
-        {
-          params: {
-            idList: listData.id,
-            name: cardName,
-            key: import.meta.env.VITE_API_KEY,
-            token: import.meta.env.VITE_TOKEN,
-          },
-        }
-      )
-
-      const cardDataObj = cardDataResponse.data
+      const cardDataResponse = await addNewCard(listId, cardName)
+      const cardData = cardDataResponse.data
 
       toast.update(id, {
-        render: `Sucessfully added ${cardDataObj.name} card`,
+        render: `Sucessfully added ${cardData.name} card`,
         type: "success",
         isLoading: false,
         autoClose: 500,
       })
 
-      cardDispatch({
-        type: "add",
-        cardDataObj: cardDataObj,
-      })
+      dispatch(addCard(cardData))
+
+
     } catch (err) {
+
       toast.update(id, {
         render: err.message,
         type: "error",
         isLoading: false,
         autoClose: 500,
       })
+
+      dispatch(setCardError(err))
+
+
     }
   }
 
   async function archiveListHandler(listId) {
     try {
-      const res = await axios.put(
-        `https://api.trello.com/1/lists/${listId}/closed`,
-        {},
-        {
-          params: {
-            value: true,
-            key: import.meta.env.VITE_API_KEY,
-            token: import.meta.env.VITE_TOKEN,
-          },
-        }
-      )
-
-      const { id: archivedListId, name: listName } = res.data
-
+      const archivedListResponse = await archiveList(listId)
+      const archivedList = archivedListResponse.data
+      const { id: archivedListId, name: listName } = archivedList
       toast.success(`${listName} list has been archived`)
-
-      listDispatch({
-        type: "archive",
-        archivedListId: archivedListId,
-      })
+      dispatch(archiveListAction(archivedListId))
     } catch (err) {
       toast.error(err.message)
+      dispatch(setListError(err))
     }
   }
 

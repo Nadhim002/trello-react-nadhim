@@ -22,6 +22,7 @@ const boardSlice = createSlice({
     add: (state, action) => {
       state.boardsData.push(action.payload)
     },
+    
   },
 })
 

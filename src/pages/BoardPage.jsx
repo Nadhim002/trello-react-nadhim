@@ -1,40 +1,37 @@
 import React, {
-  useReducer,
   useEffect,
   useRef,
   useState,
-  useContext,
-  createContext,
 } from "react"
 
 import { useParams } from "react-router-dom"
 import { toast } from "react-toastify"
-import axios from "axios"
 import { Stack, Box, Typography, Alert } from "@mui/material"
-import { Helmet } from "react-helmet"
 import ListContainer from "../components/ListContainer.jsx"
 import AddTemplate from "../components/addHelper/AddTemplate.jsx"
 import CardModal from "../components/CardModal.jsx"
 import Spinner from "../components/spinner/Spinner.jsx"
-import { cardReducer, listReducer } from "../reducers/reducers.js"
+import { setData as setCardData } from "../features/cardSlice.js"
+import { setData as setListData, add as addList, setError as setListError } from "../features/listSlice.js"
+import { useDispatch, useSelector } from "react-redux"
 import { getBoardInfo } from "../backend/loaders.js"
-
-const boardPageContext = createContext()
-
-export function useBoardPageContext() {
-  return useContext(boardPageContext)
-}
+import { addNewList } from "../backend/listCalls.js"
 
 export default function BoardPage() {
+
   const { boardId } = useParams()
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(false)
-  const [listData, listDispatch] = useReducer(listReducer, [])
-  const [cardsData, cardDispatch] = useReducer(cardReducer, {})
+
+  const dispatch = useDispatch()
+  const { listsData } = useSelector(state => state.list)
+
   const boardInfo = useRef(null)
+
   const [selectedCardInfo, setSelectedCardInfo] = useState(null)
 
   useEffect(() => {
+
     async function setData() {
       try {
         const [boardDataResponse, listsDataResponse, cardsDataReponse] =
@@ -51,10 +48,11 @@ export default function BoardPage() {
 
           return acc
         }, {})
-
         boardInfo.current = boardDataResponse.data
-        listDispatch({ type: "set_data", data: listsDataResponse.data })
-        cardDispatch({ type: "set_data", data: cardsData })
+
+        dispatch(setCardData(cardsData))
+        dispatch(setListData(listsDataResponse.data))
+
       } catch (err) {
         setError(true)
       } finally {
@@ -65,38 +63,26 @@ export default function BoardPage() {
     setData()
   }, [])
 
-  async function addListHandler(newListName) {
-    const boardId = boardInfo.current.id
 
+  async function addListHandler(newListName) {
+
+    const boardId = boardInfo.current.id
     const id = toast.loading("List Creation Started ... ")
 
     try {
-      const res = await axios.post(
-        "https://api.trello.com/1/lists",
-        {},
-        {
-          params: {
-            name: newListName,
-            idBoard: boardId,
-            key: import.meta.env.VITE_API_KEY,
-            token: import.meta.env.VITE_TOKEN,
-          },
-        }
-      )
 
-      const newListObject = res.data
+      const newListResponse = await addNewList(newListName, boardId)
+      const newList = newListResponse.data
 
       toast.update(id, {
-        render: `Sucessfully added ${newListObject.name}`,
+        render: `Sucessfully added ${newList.name}`,
         type: "success",
         isLoading: false,
         autoClose: 500,
       })
 
-      listDispatch({
-        type: "add",
-        newList: newListObject,
-      })
+      dispatch(addList(newList))
+
     } catch (err) {
       toast.update(id, {
         render: err.message,
@@ -104,6 +90,7 @@ export default function BoardPage() {
         isLoading: false,
         autoClose: 500,
       })
+      dispatch(setListError(err))
     }
   }
 
@@ -116,16 +103,8 @@ export default function BoardPage() {
           Something went wrong. Please try again later.
         </Alert>
       ) : (
-        <boardPageContext.Provider
-          value={{
-            listData,
-            listDispatch,
-            cardsData,
-            cardDispatch,
-            selectedCardInfo,
-            setSelectedCardInfo,
-          }}
-        >
+        <>
+
           <Box
             sx={{
               backgroundColor: "#f5f5f5",
@@ -157,7 +136,7 @@ export default function BoardPage() {
               backgroundColor: boardInfo.current.prefs.backgroundColor,
             }}
           >
-            {listData.map((list) => (
+            {listsData.map((list) => (
               <ListContainer listData={list} key={list["id"]} />
             ))}
 
@@ -176,7 +155,8 @@ export default function BoardPage() {
               setSelectedCardInfo={setSelectedCardInfo}
             />
           )}
-        </boardPageContext.Provider>
+
+        </>
       )}
     </>
   )

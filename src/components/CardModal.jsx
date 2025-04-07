@@ -114,6 +114,7 @@ export default function CardModal() {
           },
         }
       )
+
       checkListDispatch({
         type: "add",
         checkList: checkListResponse.data,
@@ -136,58 +137,58 @@ export default function CardModal() {
   }
 
   return (
-      <cardModelContext.Provider
-        value={{
-          checkListData,
-          checkListDispatch,
-          checkItemData,
-          checkItemDispatch,
-        }}
+    <cardModelContext.Provider
+      value={{
+        checkListData,
+        checkListDispatch,
+        checkItemData,
+        checkItemDispatch,
+      }}
+    >
+      <Modal
+        open={Boolean(selectedCardInfo)}
+        onClose={() => setSelectedCardInfo(null)}
+        sx={{ backdropFilter: "blur(2px)" }}
       >
-        <Modal
-          open={Boolean(selectedCardInfo)}
-          onClose={() => setSelectedCardInfo(null)}
-          sx={{ backdropFilter: "blur(2px)" }}
-        >
-          <Card sx={style}>
-            <Stack
-              direction="row"
-              justifyContent="space-between"
-              alignItems="center"
-              sx={{
-                pb: 2,
-                borderBottom: 1,
-                borderColor: "divider",
-              }}
+        <Card sx={style}>
+          <Stack
+            direction="row"
+            justifyContent="space-between"
+            alignItems="center"
+            sx={{
+              pb: 2,
+              borderBottom: 1,
+              borderColor: "divider",
+            }}
+          >
+            <Typography variant="h5" sx={{ fontWeight: 600 }}>
+              {selectedCardInfo?.name ?? "Name Not Found"}
+            </Typography>
+            <AddUsingModal
+              addHandler={addNewCheckListHandler}
+              toAddName={"Check List"}
             >
-              <Typography variant="h5" sx={{ fontWeight: 600 }}>
-                {selectedCardInfo?.name ?? "Name Not Found"}
-              </Typography>
-              <AddUsingModal
-                addHandler={addNewCheckListHandler}
-                toAddName={"Check List"}
-              >
-                <Button variant="contained">Add new check list</Button>
-              </AddUsingModal>
-            </Stack>
+              <Button variant="contained">Add new check list</Button>
+            </AddUsingModal>
+          </Stack>
 
-            {loading ? (
-              <Spinner />
-            ) : error ? (
-              <Alert severity="error">"Something went Wrong</Alert>
-            ) : (
-              <Grid container spacing={2}>
-                {checkListData.length == 0 ? (
-                  <div>Add Check List to Show</div>
-                ) : (
-                  checkListData.map((checkList) => (
-                    <CheckList key={checkList.id} checkList={checkList} />
-                  ))
-                )}
-              </Grid>
-            )}
-          </Card>
-        </Modal>
-      </cardModelContext.Provider>
+          {loading ? (
+            <Spinner />
+          ) : error ? (
+            <Alert severity="error">"Something went Wrong</Alert>
+          ) : (
+            <Grid container spacing={2}>
+              {checkListData.length == 0 ? (
+                <div>Add Check List to Show</div>
+              ) : (
+                checkListData.map((checkList) => (
+                  <CheckList key={checkList.id} checkList={checkList} />
+                ))
+              )}
+            </Grid>
+          )}
+        </Card>
+      </Modal>
+    </cardModelContext.Provider>
   )
 }

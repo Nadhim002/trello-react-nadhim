@@ -47,7 +47,7 @@ function HoverCard({ cardData }) {
       toast.error("Something went wrong")
     }
   }
-
+  
   async function cardDeleteHandler(cardId, listId) {
     try {
       const response = await axios.delete(

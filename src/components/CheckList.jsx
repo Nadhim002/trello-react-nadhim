@@ -23,6 +23,7 @@ export default function CheckList({ checkList }) {
   const { name: checkListName, id: checkListId, idCard: cardId } = checkList
   const checkItemDataOfGivenCheckList = checkItemData[checkListId] ?? []
 
+
   async function checkListDeleteHandler(checkListId) {
     try {
       const response = await axios.delete(

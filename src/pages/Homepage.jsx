@@ -6,7 +6,8 @@ import AddUsingModal from "../components/addHelper/AddUsingModal.jsx"
 import BoardCard from "../components/BoardCard.jsx"
 import axios from "axios"
 import { useSelector, useDispatch } from "react-redux"
-import { add as addBoard, setData as setBoardData, setError } from "../features/boardSlice.js"
+import { add as addBoardAction, setData as setBoardData, setError } from "../features/boardSlice.js"
+import { addNewBoard } from "../backend/boardCalls.js"
 
 export default function Homepage() {
 
@@ -14,6 +15,7 @@ export default function Homepage() {
   const dispatch = useDispatch()
 
   useEffect(() => {
+
     async function getAllBoards() {
       try {
         const boardsDataResponse = await axios.get(
@@ -38,29 +40,14 @@ export default function Homepage() {
     getAllBoards()
   }, [])
 
-  async function addNewBoard(newBoardName) {
-
-    const res = await axios.post(
-      "https://api.trello.com/1/boards/",
-      {},
-      {
-        params: {
-          name: newBoardName,
-          key: import.meta.env.VITE_API_KEY,
-          token: import.meta.env.VITE_TOKEN,
-        },
-      }
-    )
-    return res.data
-    
-  }
-
   async function addNewBoardHandler(newBoardName) {
 
     const id = toast.loading("Board Creation Started ... ")
 
     try {
-      const newBoard = await addNewBoard(newBoardName)
+
+      const newBoardReponse = await addNewBoard(newBoardName)
+      const newBoard = newBoardReponse.data
 
       toast.update(id, {
         render: `${newBoard.name} Board created Sucessfully`,
@@ -69,7 +56,7 @@ export default function Homepage() {
         autoClose: 500,
       })
 
-      dispatch(addBoard(newBoard))
+      dispatch(addBoardAction(newBoard))
 
     } catch (err) {
       toast.update(id, {
