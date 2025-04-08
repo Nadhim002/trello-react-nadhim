@@ -150,7 +150,7 @@ export default function BoardPage() {
             </Box>
           </Stack>
 
-          {selectedCardInfo && (
+          { selectedCardInfo && (
             <CardModal />
           )}
 

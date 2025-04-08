@@ -10,7 +10,6 @@ const checkListsSlice = createSlice({
   initialState,
   reducers: {
     setData: (state, action) => {
-      console.log("checkListData", action.payload)
       state.checkListsData = action.payload
     },
     setError: (state, action) => {

@@ -16,11 +16,11 @@ import AddUsingModal from "./addHelper/AddUsingModal"
 import { toast } from "react-toastify"
 import CheckList from "./CheckList"
 import Spinner from "./spinner/Spinner"
-import { setSelectedCard } from "../features/selectedCardSlice.js"
 import axios from "axios"
 import { addCheckList } from "../backend/checkListCalls.js"
 import { setData as setCheckListData, add as addCheckListAction, setError as setCheckListError } from "../features/checkListSlice.js"
 import { setData as setCheckItemData } from "../features/checkItemSlice.js"
+import { setSelectedCard } from "../features/selectedCardSlice.js"
 
 const style = {
   position: "absolute",
@@ -95,8 +95,6 @@ export default function CardModal() {
     getCardInfo(selectedCardInfo.id)
   }, [selectedCardInfo])
 
-
-
   async function addNewCheckListHandler(checkListName) {
     try {
       const id = toast.loading("Check List Creation Started ...")
@@ -129,7 +127,7 @@ export default function CardModal() {
 
     <Modal
       open={Boolean(selectedCardInfo)}
-      onClose={() => setSelectedCard(null)}
+      onClose={() => dispatch( setSelectedCard(null) ) }
       sx={{ backdropFilter: "blur(2px)" }}
     >
       <Card sx={style}>
