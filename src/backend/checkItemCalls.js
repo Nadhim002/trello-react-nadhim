@@ -1,4 +1,6 @@
-async function addNewCheckItem(newCheckItemName, checkListId) {
+import axios from "axios"
+
+export async function addNewCheckItem(newCheckItemName, checkListId) {
   return await axios.post(
     `https://api.trello.com/1/checklists/${checkListId}/checkItems`,
     {},
@@ -12,7 +14,7 @@ async function addNewCheckItem(newCheckItemName, checkListId) {
   )
 }
 
-async function deleteCheckItem(checkListId, checkItemId) {
+export async function deleteCheckItem(checkListId, checkItemId) {
   return await axios.delete(
     `https://api.trello.com/1/checklists/${checkListId}/checkItems/${checkItemId}`,
     {
@@ -24,7 +26,7 @@ async function deleteCheckItem(checkListId, checkItemId) {
   )
 }
 
-async function toggleCheckItemStatus(
+export async function toggleCheckItemStatus(
   cardId,
   checkListId,
   checkItemId,

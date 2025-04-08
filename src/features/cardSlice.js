@@ -26,13 +26,13 @@ const cardsSlice = createSlice({
     delete: (state, action) => {
       const { cardId, listId } = action.payload
       state.cardsData[listId] = state.cardsData[listId].filter(
-        (card) => card.id != cardId
+        (card) => card.id !== cardId
       )
     },
     changeStatus: (state, action) => {
       const { idList: listId, id: cardId } = action.payload
       state.cardsData[listId] = state.cardsData[listId].map((card) => {
-        if ((card.id = cardId)) {
+        if (card.id == cardId) {
           return action.payload
         }
         return card
@@ -41,5 +41,11 @@ const cardsSlice = createSlice({
   },
 })
 
-export const { setData, setError } = cardsSlice.actions
+export const {
+  delete: deleteCard,
+  setData,
+  setError,
+  changeStatus,
+  add,
+} = cardsSlice.actions
 export default cardsSlice.reducer

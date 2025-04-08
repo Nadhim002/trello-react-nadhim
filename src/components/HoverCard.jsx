@@ -8,15 +8,19 @@ import {
   ButtonGroup,
 } from "@mui/material"
 import DeleteIcon from "@mui/icons-material/Delete"
-import axios from "axios"
 import { toast } from "react-toastify"
-import { useBoardPageContext } from "../pages/BoardPage"
+import { cardUpdate, cardDelete } from "../backend/cardCalls.js"
+import { changeStatus, deleteCard as deleteCardAction, setError as setCardError } from "../features/cardSlice.js"
+import { setSelectedCard } from "../features/selectedCardSlice.js"
+import { useDispatch } from "react-redux"
 
 function HoverCard({ cardData }) {
-  const { setSelectedCardInfo, cardDispatch } = useBoardPageContext()
+
   const [hover, setHover] = useState(false)
   const { id: cardId, idList: listId, name: cardName } = cardData
   const isChecked = cardData.dueComplete
+
+  const dispatch = useDispatch()
 
   async function cardUpdateHandler(
     cardId,
@@ -24,55 +28,32 @@ function HoverCard({ cardData }) {
     toChangeBoolean
   ) {
     try {
-      const responseCard = await axios.put(
-        `https://api.trello.com/1/cards/${cardId}`,
-        {},
-        {
-          params: {
-            key: import.meta.env.VITE_API_KEY,
-            token: import.meta.env.VITE_TOKEN,
-            [toChangeCardAtrribute]: toChangeBoolean,
-          },
-        }
-      )
-
+      const responseCard = await cardUpdate(cardId, toChangeCardAtrribute, toChangeBoolean)
       const updatedCard = responseCard.data
 
-      cardDispatch({
-        type: "change_status",
-        updatedCard: updatedCard,
-      })
+      dispatch(changeStatus(updatedCard))
+
       toast.success(`${updatedCard.name} card has been updated scucessfully`)
     } catch (err) {
+      dispatch(setCardError(err))
       toast.error("Something went wrong")
     }
   }
-  
+
   async function cardDeleteHandler(cardId, listId) {
     try {
-      const response = await axios.delete(
-        `https://api.trello.com/1/cards/${cardId}`,
-        {
-          params: {
-            key: import.meta.env.VITE_API_KEY,
-            token: import.meta.env.VITE_TOKEN,
-          },
-        }
-      )
+      const response = await cardDelete(cardId)
 
       if (response.status == 200) {
-        cardDispatch({
-          type: "delete",
-          cardId: cardId,
-          listId: listId,
-        })
+        dispatch(deleteCardAction({ cardId, listId }))
 
         toast.success(`Card has been Deleted scucessfully`)
       } else {
         toast.error("Something went wrong")
       }
-    } catch {
-      toast.error("Something went wrong")
+    } catch (err) {
+      dispatch(setCardError(err))
+      toast.error(err.message)
     }
   }
 
@@ -97,7 +78,9 @@ function HoverCard({ cardData }) {
         }}
       >
         <Card
-          onClick={() => setSelectedCardInfo(cardData)}
+          onClick={() =>
+            dispatch(setSelectedCard(cardData))
+          }
           sx={{
             flexGrow: 1,
             padding: 1,

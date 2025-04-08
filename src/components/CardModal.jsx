@@ -1,8 +1,5 @@
 import React, {
   useEffect,
-  useReducer,
-  useContext,
-  createContext,
   useState,
 } from "react"
 import {
@@ -14,14 +11,16 @@ import {
   Button,
   Alert,
 } from "@mui/material"
-import { CheckListReducer, checkItemReducer } from "../reducers/reducers.js"
-import axios from "axios"
-import { useBoardPageContext } from "../pages/BoardPage"
+import { useDispatch, useSelector } from "react-redux"
 import AddUsingModal from "./addHelper/AddUsingModal"
 import { toast } from "react-toastify"
 import CheckList from "./CheckList"
 import Spinner from "./spinner/Spinner"
-import { Helmet } from "react-helmet"
+import { setSelectedCard } from "../features/selectedCardSlice.js"
+import axios from "axios"
+import { addCheckList } from "../backend/checkListCalls.js"
+import { setData as setCheckListData, add as addCheckListAction, setError as setCheckListError } from "../features/checkListSlice.js"
+import { setData as setCheckItemData } from "../features/checkItemSlice.js"
 
 const style = {
   position: "absolute",
@@ -40,21 +39,19 @@ const style = {
   gap: 2,
 }
 
-const cardModelContext = createContext()
-export function useCardModelContext() {
-  return useContext(cardModelContext)
-}
-
 export default function CardModal() {
-  const { selectedCardInfo, setSelectedCardInfo } = useBoardPageContext()
 
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(false)
 
-  const [checkListData, checkListDispatch] = useReducer(CheckListReducer, [])
-  const [checkItemData, checkItemDispatch] = useReducer(checkItemReducer, {})
+  const { checkListsData } = useSelector(state => state.checkList)
+  const selectedCardInfo = useSelector(state => state.selectedCard)
+  const { id: cardId, name: selectedCardName } = selectedCardInfo
+  const dispatch = useDispatch()
+
 
   useEffect(() => {
+
     async function getCardInfo(cardId) {
       try {
         const checkListResponse = await axios.get(
@@ -79,46 +76,34 @@ export default function CardModal() {
           checkListData.push(otherInfoOfCheckList)
         })
 
-        checkListDispatch({
-          type: "set_data",
-          data: checkListData,
-        })
 
-        checkItemDispatch({
-          type: "set_data",
-          data: checkItemData,
-        })
+
+        dispatch(setCheckListData(checkListData))
+        dispatch(setCheckItemData(checkItemData))
+
       } catch (err) {
+
         setError(true)
+
       } finally {
+
         setLoading(false)
+
       }
     }
 
     getCardInfo(selectedCardInfo.id)
   }, [selectedCardInfo])
 
+
+
   async function addNewCheckListHandler(checkListName) {
     try {
       const id = toast.loading("Check List Creation Started ...")
+      const checkListResponse = await addCheckList(checkListName, cardId)
+      const checkList = checkListResponse.data
 
-      const checkListResponse = await axios.post(
-        `https://api.trello.com/1/checklists`,
-        {},
-        {
-          params: {
-            name: checkListName,
-            idCard: selectedCardInfo.id,
-            key: import.meta.env.VITE_API_KEY,
-            token: import.meta.env.VITE_TOKEN,
-          },
-        }
-      )
-
-      checkListDispatch({
-        type: "add",
-        checkList: checkListResponse.data,
-      })
+      dispatch(addCheckListAction(checkList))
 
       toast.update(id, {
         render: `Sucessfully added ${checkListResponse?.data?.name}`,
@@ -127,68 +112,64 @@ export default function CardModal() {
         autoClose: 500,
       })
     } catch (err) {
+
+      dispatch(setCheckListError(err))
+
       toast.update(id, {
         render: err.message,
         type: "error",
         isLoading: false,
         autoClose: 500,
       })
+
     }
   }
 
   return (
-    <cardModelContext.Provider
-      value={{
-        checkListData,
-        checkListDispatch,
-        checkItemData,
-        checkItemDispatch,
-      }}
-    >
-      <Modal
-        open={Boolean(selectedCardInfo)}
-        onClose={() => setSelectedCardInfo(null)}
-        sx={{ backdropFilter: "blur(2px)" }}
-      >
-        <Card sx={style}>
-          <Stack
-            direction="row"
-            justifyContent="space-between"
-            alignItems="center"
-            sx={{
-              pb: 2,
-              borderBottom: 1,
-              borderColor: "divider",
-            }}
-          >
-            <Typography variant="h5" sx={{ fontWeight: 600 }}>
-              {selectedCardInfo?.name ?? "Name Not Found"}
-            </Typography>
-            <AddUsingModal
-              addHandler={addNewCheckListHandler}
-              toAddName={"Check List"}
-            >
-              <Button variant="contained">Add new check list</Button>
-            </AddUsingModal>
-          </Stack>
 
-          {loading ? (
-            <Spinner />
-          ) : error ? (
-            <Alert severity="error">"Something went Wrong</Alert>
-          ) : (
-            <Grid container spacing={2}>
-              {checkListData.length == 0 ? (
-                <div>Add Check List to Show</div>
-              ) : (
-                checkListData.map((checkList) => (
-                  <CheckList key={checkList.id} checkList={checkList} />
-                ))
-              )}
-            </Grid>
-          )}
-        </Card>
-      </Modal>
-    </cardModelContext.Provider>
+    <Modal
+      open={Boolean(selectedCardInfo)}
+      onClose={() => setSelectedCard(null)}
+      sx={{ backdropFilter: "blur(2px)" }}
+    >
+      <Card sx={style}>
+        <Stack
+          direction="row"
+          justifyContent="space-between"
+          alignItems="center"
+          sx={{
+            pb: 2,
+            borderBottom: 1,
+            borderColor: "divider",
+          }}
+        >
+          <Typography variant="h5" sx={{ fontWeight: 600 }}>
+            {selectedCardName ?? "Name Not Found"}
+          </Typography>
+          <AddUsingModal
+            addHandler={addNewCheckListHandler}
+            toAddName={"Check List"}
+          >
+            <Button variant="contained">Add new check list</Button>
+          </AddUsingModal>
+        </Stack>
+
+        {loading ? (
+          <Spinner />
+        ) : error ? (
+          <Alert severity="error">"Something went Wrong</Alert>
+        ) : (
+          <Grid container spacing={2}>
+            {checkListsData.length == 0 ? (
+              <div>Add Check List to Show</div>
+            ) : (
+              checkListsData.map((checkList) => (
+                <CheckList key={checkList.id} checkList={checkList} />
+              ))
+            )}
+          </Grid>
+        )}
+      </Card>
+    </Modal>
   )
 }

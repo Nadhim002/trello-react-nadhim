@@ -13,61 +13,46 @@ import {
 import DeleteIcon from "@mui/icons-material/Delete"
 import AddTemplate from "./addHelper/AddTemplate"
 import { toast } from "react-toastify"
-import axios from "axios"
-import { useCardModelContext } from "./CardModal"
+import { deleteCheckItem, addNewCheckItem, toggleCheckItemStatus } from "../backend/checkItemCalls.js"
+import { add as addCheckItemAction, deleteCheckItem as deleteCheckItemAction, update as updateCheckItemAction, setError as setErrorInCheckItem } from "../features/checkItemSlice.js"
+import { deleteCheckList } from "../backend/checkListCalls.js"
+import { deleteCheckList as deleteCheckListAction, setError as setErrorInCheckList } from "../features/checkListSlice.js"
+import { useDispatch, useSelector } from "react-redux"
 
 export default function CheckList({ checkList }) {
-  const { checkListDispatch, checkItemData, checkItemDispatch } =
-    useCardModelContext()
 
   const { name: checkListName, id: checkListId, idCard: cardId } = checkList
-  const checkItemDataOfGivenCheckList = checkItemData[checkListId] ?? []
+  const { checkItemsData } = useSelector(state => state.checkItem)
+  const checkItemDataOfGivenCheckList = checkItemsData[checkListId] ?? []
 
+  const dispatch = useDispatch()
 
   async function checkListDeleteHandler(checkListId) {
+
     try {
-      const response = await axios.delete(
-        `https://api.trello.com/1/checklists/${checkListId}`,
-        {
-          params: {
-            key: import.meta.env.VITE_API_KEY,
-            token: import.meta.env.VITE_TOKEN,
-          },
-        }
-      )
+
+      const response = await deleteCheckList(checkListId)
 
       if (response.status == 200) {
-        console.log(checkListId)
-        checkListDispatch({
-          type: "delete",
-          checkListId: checkListId,
-        })
+        dispatch(deleteCheckListAction(checkListId))
         toast.success(`Check List has been Deleted scucessfully`)
       } else {
         toast.error("Something went wrong")
       }
     } catch (err) {
       toast.error(err.message)
+      dispatch(setErrorInCheckList(err))
     }
   }
 
   async function addCheckItemHandler(newCheckItemName) {
+
     const id = toast.loading("Check Item Creation Started...")
 
     try {
-      const response = await axios.post(
-        `https://api.trello.com/1/checklists/${checkListId}/checkItems`,
-        {},
-        {
-          params: {
-            name: newCheckItemName,
-            key: import.meta.env.VITE_API_KEY,
-            token: import.meta.env.VITE_TOKEN,
-          },
-        }
-      )
+      const checkItemResponse = await addNewCheckItem(newCheckItemName, checkListId)
 
-      const newCheckItem = response.data
+      const newCheckItem = checkItemResponse.data
 
       toast.update(id, {
         render: `${newCheckItem.name} Check Item has been added`,
@@ -76,45 +61,35 @@ export default function CheckList({ checkList }) {
         autoClose: 500,
       })
 
-      checkItemDispatch({
-        type: "add",
-        newCheckItem: newCheckItem,
-      })
+      dispatch(addCheckItemAction(newCheckItem))
+
     } catch (err) {
+
       toast.update(id, {
         render: err.message,
         type: "error",
         isLoading: false,
         autoClose: 500,
       })
+      dispatch(setErrorInCheckItem(err))
+
     }
   }
 
   async function checkItemDeleteHandler(checkListId, checkItemId) {
     try {
-      const response = await axios.delete(
-        `https://api.trello.com/1/checklists/${checkListId}/checkItems/${checkItemId}`,
-        {
-          params: {
-            key: import.meta.env.VITE_API_KEY,
-            token: import.meta.env.VITE_TOKEN,
-          },
-        }
-      )
+      const response = await deleteCheckItem(checkListId, checkItemId)
 
       if (response.status == 200) {
-        checkItemDispatch({
-          type: "delete",
-          checkListId: checkListId,
-          checkItemId: checkItemId,
-        })
 
+        dispatch(deleteCheckItemAction({ checkListId, checkItemId }))
         toast.success(`Check Item has been Deleted scucessfully`)
       } else {
         toast.error("Something went wrong")
       }
     } catch (err) {
       toast.error(err.message)
+      dispatch(setErrorInCheckItem(err))
     }
   }
 
@@ -125,26 +100,15 @@ export default function CheckList({ checkList }) {
     checked
   ) {
     try {
-      const response = await axios.put(
-        `https://api.trello.com/1/cards/${cardId}/checklist/${checkListId}/checkItem/${checkItemId}`,
-        {},
-        {
-          params: {
-            key: import.meta.env.VITE_API_KEY,
-            token: import.meta.env.VITE_TOKEN,
-            state: checked ? "complete" : "incomplete",
-          },
-        }
-      )
+      const checkItemResponse = await toggleCheckItemStatus(cardId, checkListId, checkItemId, checked)
 
-      const updatedCheckItem = response.data
+      const updatedCheckItem = checkItemResponse.data
 
-      checkItemDispatch({
-        type: "update",
-        updatedCheckItem: updatedCheckItem,
-      })
+      dispatch(updateCheckItemAction(updatedCheckItem))
+
     } catch (err) {
       toast.error(err.message)
+      dispatch(setErrorInCheckItem(err))
     }
   }
 
@@ -193,7 +157,7 @@ export default function CheckList({ checkList }) {
           onClick={() => checkListDeleteHandler(checkListId)}
           sx={{ color: "white" }}
         >
-          <Typography variant="button" >Destroy</Typography>
+          <Typography variant="button" >Delete</Typography>
         </Button>
       </div>
 

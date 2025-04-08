@@ -1,13 +1,14 @@
 import React from "react"
 import { Stack, IconButton, Typography } from "@mui/material"
 import ArchiveIcon from "@mui/icons-material/Archive"
-import axios from "axios"
 import HoverCard from "./HoverCard"
 import AddTemplate from "./addHelper/AddTemplate"
 import { toast } from "react-toastify"
 import { useDispatch, useSelector } from "react-redux"
 import { archive as archiveListAction, setError as setListError } from "../features/listSlice"
-import { add as addCard, setError as setCardError } from "../features/listSlice"
+import { setError as setCardError, add as addCardAction } from "../features/cardSlice.js"
+import { addNewCard } from "../backend/cardCalls.js"
+import { archiveList } from "../backend/listCalls.js"
 
 
 export default function ListContainer({ listData }) {
@@ -32,8 +33,7 @@ export default function ListContainer({ listData }) {
         autoClose: 500,
       })
 
-      dispatch(addCard(cardData))
-
+      dispatch(addCardAction(cardData))
 
     } catch (err) {
 

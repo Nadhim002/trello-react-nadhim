@@ -12,7 +12,7 @@ import AddTemplate from "../components/addHelper/AddTemplate.jsx"
 import CardModal from "../components/CardModal.jsx"
 import Spinner from "../components/spinner/Spinner.jsx"
 import { setData as setCardData } from "../features/cardSlice.js"
-import { setData as setListData, add as addList, setError as setListError } from "../features/listSlice.js"
+import { setData as setListData, add as addListAction, setError as setListError } from "../features/listSlice.js"
 import { useDispatch, useSelector } from "react-redux"
 import { getBoardInfo } from "../backend/loaders.js"
 import { addNewList } from "../backend/listCalls.js"
@@ -25,10 +25,9 @@ export default function BoardPage() {
 
   const dispatch = useDispatch()
   const { listsData } = useSelector(state => state.list)
+  const selectedCardInfo = useSelector(state => state.selectedCard)
 
   const boardInfo = useRef(null)
-
-  const [selectedCardInfo, setSelectedCardInfo] = useState(null)
 
   useEffect(() => {
 
@@ -38,6 +37,7 @@ export default function BoardPage() {
           await getBoardInfo(boardId)
 
         const cardsData = cardsDataReponse.data.reduce((acc, cardData) => {
+          
           const listIdOfCard = cardData["idList"]
 
           if (!acc[listIdOfCard]) {
@@ -48,6 +48,7 @@ export default function BoardPage() {
 
           return acc
         }, {})
+
         boardInfo.current = boardDataResponse.data
 
         dispatch(setCardData(cardsData))
@@ -81,7 +82,7 @@ export default function BoardPage() {
         autoClose: 500,
       })
 
-      dispatch(addList(newList))
+      dispatch(addListAction(newList))
 
     } catch (err) {
       toast.update(id, {
@@ -150,10 +151,7 @@ export default function BoardPage() {
           </Stack>
 
           {selectedCardInfo && (
-            <CardModal
-              selectedCardInfo={selectedCardInfo}
-              setSelectedCardInfo={setSelectedCardInfo}
-            />
+            <CardModal />
           )}
 
         </>

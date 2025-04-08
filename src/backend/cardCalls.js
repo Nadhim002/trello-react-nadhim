@@ -18,7 +18,7 @@ export async function cardUpdate(
   )
 }
 
-export async function cardDelete(cardId, listId) {
+export async function cardDelete(cardId) {
   return await axios.delete(`https://api.trello.com/1/cards/${cardId}`, {
     params: {
       key: import.meta.env.VITE_API_KEY,
@@ -27,7 +27,7 @@ export async function cardDelete(cardId, listId) {
   })
 }
 
-async function addNewCard(listId, cardName) {
+export async function addNewCard(listId, cardName) {
   return await axios.post(
     "https://api.trello.com/1/cards",
     {},
