@@ -26,5 +26,5 @@ const boardSlice = createSlice({
   },
 })
 
-export const { setData, setError, add } = boardSlice.actions
+export const { setData, setError, add  } = boardSlice.actions
 export default boardSlice.reducer

@@ -1,28 +1,18 @@
-import axios from "axios"
+import { axiosApiInstance } from "./axiosApiInstance.js"
 
-export async function addCheckList(checkListName , cardId  ) {
-  return await axios.post(
-    `https://api.trello.com/1/checklists`,
+export async function addCheckList(checkListName, cardId) {
+  return await axiosApiInstance.post(
+    `/checklists`,
     {},
     {
       params: {
         name: checkListName,
-        idCard: cardId ,
-        key: import.meta.env.VITE_API_KEY,
-        token: import.meta.env.VITE_TOKEN,
+        idCard: cardId,
       },
     }
   )
 }
 
 export async function deleteCheckList(checkListId) {
-  return await axios.delete(
-    `https://api.trello.com/1/checklists/${checkListId}`,
-    {
-      params: {
-        key: import.meta.env.VITE_API_KEY,
-        token: import.meta.env.VITE_TOKEN,
-      },
-    }
-  )
+  return await axiosApiInstance.delete(`/checklists/${checkListId}`)
 }

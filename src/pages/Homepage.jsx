@@ -56,6 +56,10 @@ export default function Homepage() {
         autoClose: 500,
       })
 
+      console.log( addBoardAction(newBoard) )
+
+      dispatch( {type: "add/setData" , payload :newBoard } )
+      
       dispatch(addBoardAction(newBoard))
 
     } catch (err) {

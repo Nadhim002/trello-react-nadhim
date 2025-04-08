@@ -1,17 +1,15 @@
-import axios from "axios"
+import { axiosApiInstance } from "./axiosApiInstance.js"
 
 export async function cardUpdate(
   cardId,
   toChangeCardAtrribute,
   toChangeBoolean
 ) {
-  return await axios.put(
-    `https://api.trello.com/1/cards/${cardId}`,
+  return await axiosApiInstance.put(
+    `/cards/${cardId}`,
     {},
     {
       params: {
-        key: import.meta.env.VITE_API_KEY,
-        token: import.meta.env.VITE_TOKEN,
         [toChangeCardAtrribute]: toChangeBoolean,
       },
     }
@@ -19,24 +17,17 @@ export async function cardUpdate(
 }
 
 export async function cardDelete(cardId) {
-  return await axios.delete(`https://api.trello.com/1/cards/${cardId}`, {
-    params: {
-      key: import.meta.env.VITE_API_KEY,
-      token: import.meta.env.VITE_TOKEN,
-    },
-  })
+  return await axiosApiInstance.delete(`/cards/${cardId}`)
 }
 
 export async function addNewCard(listId, cardName) {
-  return await axios.post(
-    "https://api.trello.com/1/cards",
+  return await axiosApiInstance.post(
+    "/cards",
     {},
     {
       params: {
         idList: listId,
         name: cardName,
-        key: import.meta.env.VITE_API_KEY,
-        token: import.meta.env.VITE_TOKEN,
       },
     }
   )

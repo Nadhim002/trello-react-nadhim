@@ -1,17 +1,13 @@
-import axios from "axios"
+import { axiosApiInstance } from "./axiosApiInstance"
 
-export  async function addNewBoard(newBoardName) {
-
-    return await axios.post(
-      "https://api.trello.com/1/boards/",
-      {},
-      {
-        params: {
-          name: newBoardName,
-          key: import.meta.env.VITE_API_KEY,
-          token: import.meta.env.VITE_TOKEN,
-        },
-      }
-    )
-
-  }
+export async function addNewBoard(newBoardName) {
+  return await axiosApiInstance.post(
+    "boards/",
+    {},
+    {
+      params: {
+        name: newBoardName,
+      },
+    }
+  )
+}
